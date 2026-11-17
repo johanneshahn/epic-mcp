@@ -17,8 +17,9 @@ structured tools for LLM clients (OpenCode, Claude Desktop, …).
 ## Requirements
 
 - Node.js ≥ 20
-- `epic` (node) and `epic-wallet` on `PATH` (or configured via `EPIC_MCP_*_BIN`)
-- A running node; for floonet, for example `epic --floonet`
+- `epic-wallet` on `PATH` (or an absolute path via `EPIC_MCP_WALLET_BIN`)
+- A running, reachable node HTTP API; for floonet, for example `epic --floonet`.
+  The `epic` node binary is **not** spawned by this server.
 - An initialized wallet
 
 ## Install & Build
@@ -38,11 +39,11 @@ shell).
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `EPIC_MCP_NODE_BIN` | `epic` | Node binary |
+| `EPIC_MCP_NODE_BIN` | `epic` | Currently unused – node access is HTTP-only; reserved for a possible CLI fallback |
 | `EPIC_MCP_NODE_URL` | from config, otherwise `3413` | Node API endpoint (highest priority) |
 | `EPIC_MCP_NODE_CONFIG` | – | Path to an `epic-server.toml`. Supplies `api_http_addr` (node URL) and `chain_type` (network). Works outside `~/.epic` as well. |
 | `EPIC_MCP_API_SECRET` | from `~/.epic/<chain-home>/.api_secret` | Basic auth secret |
-| `EPIC_MCP_WALLET_BIN` | `epic-wallet` | Wallet binary |
+| `EPIC_MCP_WALLET_BIN` | `epic-wallet` | Wallet binary; bare name resolved via `PATH`, or an absolute path |
 | `EPIC_MCP_WALLET_PASSWORD` | – | Wallet password for unattended calls |
 | `EPIC_MCP_WALLET_ACCOUNT` | `default` | Account |
 | `EPIC_MCP_WALLET_NODE_URL` | – | `-r` for the wallet |
@@ -58,6 +59,21 @@ shell).
 > visible in the process list: run the server as a dedicated OS user and protect the
 > configuration with `chmod 600`. Alternatively, start the wallet in `owner_api` mode and switch
 > a future version of this server over to it.
+
+### Binary discovery
+
+- **Node:** no `epic` binary is executed. The server talks JSON-RPC v2 to the HTTP endpoint
+  resolved from `EPIC_MCP_NODE_URL`, then `api_http_addr` in `EPIC_MCP_NODE_CONFIG`, then
+  `127.0.0.1:3413`. `EPIC_MCP_NODE_BIN` exists in the config schema but has no effect today.
+- **Wallet:** `EPIC_MCP_WALLET_BIN` defaults to the bare name `epic-wallet` and is passed to
+  Node's `execFile` with an argument array (no shell). A bare name is looked up in the `PATH`
+  **of the MCP server process**, which inherits the environment of the client that launched it
+  (e.g. the OpenCode background service). If the client was started from a GUI and its `PATH`
+  misses the wallet's install directory, set `EPIC_MCP_WALLET_BIN` to an absolute path instead.
+- If the binary cannot be found or executed, tools return
+  `Binary "…" was not found or is not executable. Check EPIC_MCP_NODE_BIN / EPIC_MCP_WALLET_BIN or your PATH.`
+  (that message mentions both variables for historical reasons; only `EPIC_MCP_WALLET_BIN` can
+  affect binary lookup today).
 
 ## Client setup
 
