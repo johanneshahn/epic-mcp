@@ -43,12 +43,17 @@ describe('loadConfig', () => {
     }
   });
 
-  it('defaults to mainnet with port 3413 when no config is present', () => {
+  it('defaults to mainnet with port 3413 and read-only mode when no config is present', () => {
     const config = loadConfig();
     expect(config.chain).toBe('mainnet');
     expect(config.nodeUrl).toBe('http://127.0.0.1:3413');
     expect(config.chainFlag).toBeNull();
-    expect(config.readOnly).toBe(false);
+    expect(config.readOnly).toBe(true);
+  });
+
+  it('enables state-changing tools only with an explicit EPIC_MCP_READ_ONLY=false', () => {
+    process.env.EPIC_MCP_READ_ONLY = 'false';
+    expect(loadConfig().readOnly).toBe(false);
   });
 
   it('ignores EPIC_MCP_CHAIN', () => {

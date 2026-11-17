@@ -6,8 +6,9 @@ structured tools for LLM clients (OpenCode, Claude Desktop, …).
 - **Hybrid integration:** node via JSON-RPC v2 (`/v2/foreign`, `/v2/owner`), wallet via the
   `epic-wallet` CLI. The `epic client` subcommands are deliberately not exposed as tools because
   they require a TTY and do not work reliably over stdio.
-- **Full automation:** state-changing tools run immediately (`destructiveHint`/`openWorldHint`
-  are set). Set `EPIC_MCP_READ_ONLY=true` to restrict everything to read-only.
+- **Read-only by default:** all state-changing tools are blocked until you explicitly set
+  `EPIC_MCP_READ_ONLY=false`. Read tools run immediately; write/destructive tools carry the
+  matching annotations.
 - **Network from config:** `chain_type` in `epic-server.toml` determines mainnet, floonet or
   usernet. When no config is supplied, mainnet is assumed (Epic's own default).
 - **No secret leaks:** the API secret, wallet password and recovery phrase are never returned to
@@ -46,7 +47,7 @@ shell).
 | `EPIC_MCP_WALLET_ACCOUNT` | `default` | Account |
 | `EPIC_MCP_WALLET_NODE_URL` | – | `-r` for the wallet |
 | `EPIC_MCP_WALLET_DIR` / `EPIC_MCP_WALLET_CURRENT_DIR` | – | `-t` / `-c` |
-| `EPIC_MCP_READ_ONLY` | `false` | Disables all state-changing tools |
+| `EPIC_MCP_READ_ONLY` | `true` | Blocks all state-changing tools (node and wallet); set to `false` to allow them |
 | `EPIC_MCP_MAX_SEND_AMOUNT` | – | Optional maximum per `wallet_send`/`wallet_pay`, in EPIC |
 | `EPIC_MCP_CLI_TIMEOUT_MS` | `60000` | Timeout per CLI call |
 | `EPIC_MCP_HTTP_TIMEOUT_MS` | `20000` | Timeout per HTTP call |
@@ -89,6 +90,10 @@ available as `/epic:epic-health-check`, etc.
 Note that `{env:NAME}` is resolved when OpenCode's background service starts. Restart the service
 after changing exported variables. The example sets `"codemode": false` so tools are exposed
 directly (`epic_node_get_tip`) instead of through Code Mode scripts. Remove it to use Code Mode.
+
+The server starts in **read-only** mode. To enable writes, add `"EPIC_MCP_READ_ONLY": "false"` to
+the `environment` block above (or set it in the shell before starting the client). The config
+guard applies to every write tool, including node tools such as `node_ban_peer`.
 
 ### Claude Desktop
 
@@ -156,9 +161,10 @@ In `claude_desktop_config.json`:
    server instructions point this out to the client.
 2. **Secrets stay local.** `redact()` removes the API secret, password and lines containing
    seed/recovery/passphrase terms from every tool response.
-3. **Full automation is intentionally risky.** An LLM can spend money with `wallet_send`. For
-   production mainnet use, set `EPIC_MCP_READ_ONLY=true` or a maximum amount, and/or block
-   state-changing tools through client permissions.
+3. **Read-only is the safe default.** State-changing tools return an error until
+   `EPIC_MCP_READ_ONLY=false` is set explicitly. An LLM can spend money with `wallet_send`, so
+   enabling writes should be a deliberate decision; consider `EPIC_MCP_MAX_SEND_AMOUNT` or client
+   permissions as additional limits.
 4. **No shell.** All CLI calls use `execFile` with argument arrays.
 5. **Timeouts and output limits** prevent hanging processes and context overflow.
 

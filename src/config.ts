@@ -142,7 +142,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     walletNodeUrl: overrides.walletNodeUrl ?? env('EPIC_MCP_WALLET_NODE_URL'),
     walletDir: overrides.walletDir ?? env('EPIC_MCP_WALLET_DIR'),
     walletCurrentDir: overrides.walletCurrentDir ?? env('EPIC_MCP_WALLET_CURRENT_DIR'),
-    readOnly: overrides.readOnly ?? envBool('EPIC_MCP_READ_ONLY', false),
+    readOnly: overrides.readOnly ?? envBool('EPIC_MCP_READ_ONLY', true),
     maxSendAmount:
       overrides.maxSendAmount ?? (maxSendRaw === undefined ? undefined : Number(maxSendRaw)),
     cliTimeoutMs: overrides.cliTimeoutMs ?? envInt('EPIC_MCP_CLI_TIMEOUT_MS', 60_000),

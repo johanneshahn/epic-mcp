@@ -29,8 +29,16 @@ const config = (readOnly: boolean) =>
   });
 
 describe('EPIC_MCP_READ_ONLY', () => {
-  it('keeps full automation when the variable is not set', () => {
-    expect(loadConfig().readOnly).toBe(false);
+  it('defaults to read-only when the variable is not set', () => {
+    expect(loadConfig().readOnly).toBe(true);
+  });
+
+  it('allows state-changing node tools with an explicit read-only=false', async () => {
+    const banPeer = vi.fn().mockResolvedValue({});
+    const handlers = captureNodeTools(config(false), { banPeer });
+    const result = await handlers.get('node_ban_peer')!({ peer: '1.2.3.4:13414' });
+    expect(result.isError).toBeUndefined();
+    expect(banPeer).toHaveBeenCalledWith('1.2.3.4:13414');
   });
 
   it('blocks every state-changing node tool', async () => {
