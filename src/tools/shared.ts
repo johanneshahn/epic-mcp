@@ -2,7 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import type { ZodRawShape } from 'zod';
 import type { Config } from '../config.js';
-import { ok, toolError } from '../util/output.js';
+import { assertNotReadOnly, ok, toolError } from '../util/output.js';
 
 type Params = Record<string, any>;
 
@@ -39,6 +39,7 @@ export function addTool(
 ): void {
   server.registerTool(name, { ...meta, inputSchema }, async (params: Params) => {
     try {
+      if (meta.annotations.readOnlyHint === false) assertNotReadOnly(config);
       return ok(await handler(params));
     } catch (error) {
       return toolError(error, config);

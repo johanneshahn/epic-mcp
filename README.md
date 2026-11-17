@@ -75,7 +75,8 @@ In `~/.config/opencode/opencode.jsonc` (global) or `opencode.jsonc` in the proje
         "environment": {
           "EPIC_MCP_NODE_CONFIG": "/Users/johanneshahn/.epic/main/epic-server.toml",
           "EPIC_MCP_WALLET_PASSWORD": "{env:EPIC_MCP_WALLET_PASSWORD}"
-        }
+        },
+        "codemode": false
       }
     }
   }
@@ -86,8 +87,8 @@ Then check with `opencode mcp list`. Tools are named `epic_wallet_get_info`, etc
 available as `/epic:epic-health-check`, etc.
 
 Note that `{env:NAME}` is resolved when OpenCode's background service starts. Restart the service
-after changing exported variables. Set `"codemode": false` on the server object if you want the
-tools exposed directly instead of through Code Mode scripts.
+after changing exported variables. The example sets `"codemode": false` so tools are exposed
+directly (`epic_node_get_tip`) instead of through Code Mode scripts. Remove it to use Code Mode.
 
 ### Claude Desktop
 
